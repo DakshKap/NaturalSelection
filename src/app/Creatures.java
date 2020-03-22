@@ -2,26 +2,28 @@ package app;
 
 import java.util.Random;
 
+
 class Creature {
     private int speed;
     private int energy;
     private int sense;
     private int foodQuantity;
     private int[] position;
-    
+
     private Creature() {
         position = new int[2];
         energy = 50;
     }
 
-    Creature(int speed, int sense) {
+    Creature(int speed, int sense,int[] position) {
         this.speed = speed;
         this.sense = sense;
         position = new int[2];
         energy = 50;
+        this.position = position;
     }
 
-    public void move(Creature cr) {
+    public int[] move(Creature cr) {
         Random rd = new Random();
         int dir = rd.nextInt(4);
         switch (dir) {
@@ -51,17 +53,37 @@ class Creature {
         if (position[1] > 99)
             position[1] = 98;
 
+        return cr.position;
+
     }
-    public void move(Creature cr, int[] foodPos){
+
+    public boolean move(Creature cr, int[] foodPos) {
         int xDist = Math.abs(foodPos[0] - cr.position[0]);
         int yDist = Math.abs(foodPos[1] - cr.position[1]);
+        int xDir = (foodPos[0] - cr.position[0]) / xDist;
+        int yDir = (foodPos[1] - cr.position[1]) / yDist;
         int tempSpeed = cr.speed;
-        if(xDist + yDist < tempSpeed){ // food is withinn the speed range of the creature
+        if (xDist + yDist < tempSpeed) { // food is within the speed range of the creature
             cr.position[0] = foodPos[0];
             cr.position[1] = foodPos[1];
-            energy = energy - 2*(xDist+yDist);
-        }else{
-           // movement towards the food if food is outside the range of the creature
+            energy = energy - 2 * (xDist + yDist);
+            return true;
+        } else {
+            // movement towards the food if food is outside the range of the creature
+            while (tempSpeed > 0) {
+                if (xDist > 0) {
+                    position[0] += xDir;
+                    xDist--;
+                    tempSpeed--;
+                    energy -= 2;
+                } else {
+                    position[1] += yDir;
+                    yDist--;
+                    tempSpeed--;
+                    energy -= 2;
+                }
+            }
+            return false;
         }
     }
 
@@ -79,7 +101,7 @@ class Creature {
             child.speed = parent.speed;
 
         // Sense
-        if (senseChance < 50 && parent.sense > 1)
+        if (senseChance < 50 && parent.sense > 2)
             child.sense = parent.sense / 2;
         else if (senseChance > 50)
             child.sense = parent.sense * 2;
