@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import global.Constants;
+import global.Utility;
+
 public class App {
-    public final static int xCap = 20;
-    public final static int yCap = 20;
+    final static int xCap = Constants.XCAP;
+    final static int yCap = Constants.YCAP;
     private static char[][] grid;
     private static ArrayList<Creature> crList;
     public static void main(String[] args) throws Exception {
@@ -15,26 +18,107 @@ public class App {
         for(int i=0;i<xCap;i++)
             Arrays.fill(grid[i], '-');
         crList = new ArrayList<Creature>();
-        
-        createCreatures(5);
+         //create intial creatures
+        initCreatures(5);
         setUpFood(20);
-        printArr(grid);
-        //create intial creatures
-
-    }
-
-    public static void printArr(char[][] arr){
-        for(int i=0;i<arr.length;i++){
-            for(int j=0;j<arr[0].length;j++){
-                System.out.print(arr[i][j]+" ");
+        System.out.println("................Intial State...........");
+        Utility.printArr(grid);
+        System.out.println("................After first move...........");
+        for(Creature cr:crList){
+            int[] start = cr.getPosition();
+            grid[start[0]][start[1]] = '-';
+            int[] end = cr.move();
+            //if the creature gets food
+            ArrayList<Integer[]> foodList = foundFood(start, end);
+            if(foodList.size() > 0){
+                cr.addEnergy(foodList.size()*50);
             }
-            System.out.println(" ");
+            //Check if the creature can reproduce
+            if(cr.getEnergy() > 100){
+                int[] childPos = generateChildCord(end);
+                crList.add(cr.reproduce(cr,childPos));
+                grid[end[0]][end[1]] = 'C';
+            }
+            grid[end[0]][end[1]] = 'C';
         }
+        Utility.printArr(grid);
+
     }
 
-    public static void createCreatures(int number){
+
+    //Trace through the path to see if the creature ran into food
+    public static ArrayList<Integer[]> foundFood(int[] start, int[] end){
+        ArrayList<Integer[]> foodList = new ArrayList<>();
+        int xMove = end[0]-start[0];
+        int yMove = end[1]-start[1];
+        int steps = Math.abs(xMove+yMove);
+        int dir = 0;
+        if(xMove >= 0 && yMove >= 0){
+            dir = 1;
+        }else{
+            dir = -1;
+        }
+        while(steps > 0){
+            if(xMove != 0){
+                start[0] += dir;
+                if(grid[start[0]][start[1]] == 'F'){
+                    Integer foodPos[] = {start[0],start[1]};
+                    foodList.add(foodPos);
+                }
+                steps--;
+            }else if(yMove != 0){
+                start[1] += dir;
+                if(grid[start[0]][start[1]] == 'F'){
+                    Integer foodPos[] = {start[0],start[1]};
+                    foodList.add(foodPos);
+                }
+                steps--;
+            }
+        }
+        return foodList;
+        
+    }
+
+    public static int[] generateChildCord(int[] position) {
+        Random rd = new Random();
+        int dir = rd.nextInt(4);
+        switch (dir) {
+            case 0:
+                position[0] -= 1;
+                break;
+            case 1:
+                position[1] += 1;
+                break;
+            case 2:
+                position[0] += 1;
+                break;
+            case 3:
+                position[1] -= 1;
+                break;
+        }
+        // Keeping the creatures in bounds.
+        if (position[0] < 0)
+            position[0] = 1;
+
+        if (position[1] < 0)
+            position[1] = 1;
+
+        if (position[0] >= Constants.XCAP)
+            position[0] = Constants.XCAP-2;
+
+        if (position[1] >= Constants.YCAP)
+            position[1] = Constants.YCAP-2;
+
+        while(grid[position[0]][position[1]] == 'C' || grid[position[0]][position[1]] == 'F'){
+            position = generateChildCord(position);
+        }
+        return position;
+
+    }
+
+    public static void initCreatures(int number){
         while(number > 0){
-            int[] pos = generateRandomCoordinates();
+            int[] pos = Utility.generateRandomCoordinates();
             Creature cr = new Creature(1, 2, pos);
             grid[pos[0]][pos[1]] = 'C';
             crList.add(cr);
@@ -44,7 +128,7 @@ public class App {
 
     public static void setUpFood(int quantity){
         for(int i=0;i<quantity;i++){
-            int[] temp = generateRandomCoordinates();
+            int[] temp = Utility.generateRandomCoordinates();
             if(grid[temp[0]][temp[1]] != 'F' || grid[temp[0]][temp[1]] != 'C'){
                 grid[temp[0]][temp[1]] = 'F';
             }else{// to avoid duplication of food on the same spot
@@ -53,11 +137,5 @@ public class App {
         }
     }
 
-    public static int[] generateRandomCoordinates(){
-        int[] cord = new int[2];
-        Random rd = new Random();
-        cord[0] = rd.nextInt(xCap);
-        cord[1] = rd.nextInt(yCap);
-        return cord;
-    }
+    
 }

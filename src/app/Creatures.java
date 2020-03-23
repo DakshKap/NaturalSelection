@@ -2,6 +2,8 @@ package app;
 
 import java.util.Random;
 
+import global.Constants;
+
 
 class Creature {
     private int speed;
@@ -9,7 +11,9 @@ class Creature {
     private int sense;
     private int foodQuantity;
     private int[] position;
+    private int generation;
 
+    
     private Creature() {
         position = new int[2];
         energy = 50;
@@ -18,17 +22,18 @@ class Creature {
     Creature(int speed, int sense,int[] position) {
         this.speed = speed;
         this.sense = sense;
-        position = new int[2];
         energy = 50;
         this.position = position;
+        generation = 1;
     }
 
-    public int[] move(Creature cr) {
+    // Add energy burning and check with every step taken
+    public int[] move() {
         Random rd = new Random();
         int dir = rd.nextInt(4);
         switch (dir) {
             case 0:
-                position[0] += speed;
+                position[0] -= speed;
                 break;
             case 1:
                 position[1] += speed;
@@ -37,7 +42,7 @@ class Creature {
                 position[0] += speed;
                 break;
             case 3:
-                position[1] += speed;
+                position[1] -= speed;
                 break;
         }
         // Keeping the creatures in bounds.
@@ -47,25 +52,26 @@ class Creature {
         if (position[1] < 0)
             position[1] = 1;
 
-        if (position[0] > 99)
-            position[0] = 98;
+        if (position[0] >= Constants.XCAP)
+            position[0] = Constants.XCAP-2;
 
-        if (position[1] > 99)
-            position[1] = 98;
+        if (position[1] >= Constants.YCAP)
+            position[1] = Constants.YCAP-2;
 
-        return cr.position;
+        return position;
 
     }
 
-    public boolean move(Creature cr, int[] foodPos) {
-        int xDist = Math.abs(foodPos[0] - cr.position[0]);
-        int yDist = Math.abs(foodPos[1] - cr.position[1]);
-        int xDir = (foodPos[0] - cr.position[0]) / xDist;
-        int yDir = (foodPos[1] - cr.position[1]) / yDist;
-        int tempSpeed = cr.speed;
+    // Add energy burning and check with every step taken
+    public boolean move(int[] foodPos) {
+        int xDist = Math.abs(foodPos[0] - position[0]);
+        int yDist = Math.abs(foodPos[1] - position[1]);
+        int xDir = (foodPos[0] - position[0]) / xDist;
+        int yDir = (foodPos[1] - position[1]) / yDist;
+        int tempSpeed = speed;
         if (xDist + yDist < tempSpeed) { // food is within the speed range of the creature
-            cr.position[0] = foodPos[0];
-            cr.position[1] = foodPos[1];
+            position[0] = foodPos[0];
+            position[1] = foodPos[1];
             energy = energy - 2 * (xDist + yDist);
             return true;
         } else {
@@ -87,7 +93,7 @@ class Creature {
         }
     }
 
-    public Creature reproduce(Creature parent) {
+    public Creature reproduce(Creature parent, int[] pos) {
         int speedChance = (int) Math.random() * 100;
         int senseChance = (int) Math.random() * 100;
         Creature child = new Creature();
@@ -107,7 +113,9 @@ class Creature {
             child.sense = parent.sense * 2;
         else
             child.sense = parent.sense;
-
+        child.position = pos;
+        energy -= 50;
+        child.generation = parent.generation + 1;
         return child;
     }
 
@@ -131,9 +139,16 @@ class Creature {
     public int getEnergy() {
         return this.energy;
     }
+    public void addEnergy(int energy) {
+        this.energy += energy;
+    }
 
     public int getSense() {
         return this.sense;
     }
+    public int getGeneration() {
+        return this.generation;
+    }
+
 
 }
