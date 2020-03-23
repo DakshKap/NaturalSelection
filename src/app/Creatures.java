@@ -1,7 +1,5 @@
 package app;
-
 import java.util.Random;
-
 import global.Constants;
 
 
@@ -45,6 +43,7 @@ class Creature {
                 position[1] -= speed;
                 break;
         }
+        energy -= 2*speed;
         // Keeping the creatures in bounds.
         if (position[0] < 0)
             position[0] = 1;
@@ -117,6 +116,18 @@ class Creature {
         energy -= 50;
         child.generation = parent.generation + 1;
         return child;
+    }
+
+    public int[][] getSenseArea(){
+        int[][] senseArea = {{position[0]-sense,position[1]},
+                            {position[0]+sense,position[1]},
+                            {position[0],position[1]-sense},
+                            {position[0],position[1]+sense},
+                            {position[0]+sense,position[1]+sense}, //Diagnol Coordinates
+                            {position[0]-sense,position[1]-sense},
+                            {position[0]+sense,position[1]-sense},
+                            {position[0]-sense,position[1]+sense}};
+        return senseArea;
     }
 
     // Getters & Setters
